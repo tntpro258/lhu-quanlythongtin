@@ -1,26 +1,102 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <v-app>
+    <!-- Sử dụng CustomHeader component -->
+    <custom-header
+      :isLoggedIn="isLoggedIn"
+      :routes="routes"
+      :drawer="drawer"
+      @toggle-drawer="toggleDrawer"
+      @logout="handleLogout"
+    />
+
+    <!-- Navigation Drawer cho màn hình nhỏ -->
+    <v-navigation-drawer v-model="drawer" temporary>
+      <v-list>
+        <v-list-item
+          v-for="route in routes"
+          :key="route.name"
+          :to="route.path"
+          @click="drawer = false"
+          class="menu-item"
+        >
+          <v-list-item-title>{{ route.name }}</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
+
+    <!-- Nội dung chính -->
+    <v-main>
+      <router-view />
+    </v-main>
+
+    <!-- Footer -->
+    <v-footer color="#1976D2" class="footer">
+      <v-container class="text-center">
+        © {{ new Date().getFullYear() }} Đại học Lạc Hồng. Tất cả các quyền được bảo lưu.
+      </v-container>
+    </v-footer>
+  </v-app>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import CustomHeader from './components/CustomHeader.vue';
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
-    HelloWorld
+    CustomHeader
+  },
+  data() {
+    return {
+      drawer: false, // Trạng thái của menu xổ xuống
+      isLoggedIn: false, // Trạng thái đăng nhập
+      routes: [
+        { path: "/", name: "Trang Chủ" },
+        { path: "/scientific-profile", name: "Hồ Sơ Khoa Học" },
+        { path: "/research-cooperation", name: "Hợp Tác Nghiên Cứu" },
+        { path: "/contests", name: "Cuộc Thi" },
+        { path: "/products", name: "Sản Phẩm" },
+      ],
+    };
+  },
+  methods: {
+    toggleDrawer() {
+      this.drawer = !this.drawer; // Thay đổi trạng thái của drawer
+    },
+    handleLogout() {
+      this.isLoggedIn = false;
+      localStorage.removeItem("isLoggedIn");
+    }
+  },
+  mounted() {
+    this.isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
   }
-}
+};
 </script>
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+<style scoped>
+.v-application {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.v-main {
+  flex: 1 0 auto;
+}
+
+.footer {
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+  }
+}
+
+.menu-item {
+  cursor: pointer;
 }
 </style>
+
