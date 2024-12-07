@@ -4,7 +4,7 @@
       <v-card-title class="text-h4 mb-4">
         Quản lý người dùng
         <v-spacer></v-spacer>
-        <v-btn color="primary" @click="openDialog" prepend-icon="mdi-plus">
+        <v-btn v-if="isAdmin" color="primary" @click="openDialog" prepend-icon="mdi-plus">
           Thêm người dùng
         </v-btn>
       </v-card-title>
@@ -20,7 +20,7 @@
         <!-- Tô màu vai trò -->
         <template v-slot:[`item.role`]="{ item }">
           <v-chip
-            :color="item.role === 'admin' ? 'red lighten-2' : 'blue lighten-2'"
+            :color="item.role === 'ADMIN' ? 'red lighten-2' : 'blue lighten-2'"
             dark
           >
             {{ item.role.toUpperCase() }}
@@ -32,10 +32,21 @@
           <v-btn icon color="info" @click="viewProfile(item)" class="mr-2">
             <v-icon>mdi-eye</v-icon>
           </v-btn>
-          <v-btn icon color="warning" @click="editItem(item)" class="mr-2">
+          <v-btn
+            v-if="isAdmin"
+            icon
+            color="warning"
+            @click="editItem(item)"
+            class="mr-2"
+          >
             <v-icon>mdi-pencil</v-icon>
           </v-btn>
-          <v-btn icon color="error" @click="deleteItem(item)">
+          <v-btn
+            v-if="isAdmin"
+            icon
+            color="error"
+            @click="deleteItem(item)"
+          >
             <v-icon>mdi-delete</v-icon>
           </v-btn>
         </template>
@@ -70,7 +81,7 @@
               <v-col cols="12">
                 <v-select
                   v-model="editedItem.role"
-                  :items="['user', 'admin']"
+                  :items="['USER', 'ADMIN']"
                   label="Vai trò"
                   prepend-icon="mdi-shield-account"
                   required
@@ -134,6 +145,7 @@ export default {
     const deleteDialog = ref(false);
     const formTitle = ref("Thêm người dùng");
     const users = ref([]);
+    const isAdmin = ref(false);
     const headers = [
       { title: "Tên đăng nhập", align: "start", key: "name" },
       { title: "Email", align: "start", key: "email" },
@@ -144,14 +156,14 @@ export default {
       id: null,
       name: "",
       email: "",
-      role: "user",
+      role: "USER",
       password: "",
     });
     const defaultItem = {
       id: null,
       name: "",
       email: "",
-      role: "user",
+      role: "USER",
       password: "",
     };
     const editedIndex = ref(-1);
@@ -159,9 +171,20 @@ export default {
 
     const fetchUsers = async () => {
       try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error("User not authenticated");
+        }
+
         const { data, error } = await supabase.from("users").select("*");
         if (error) throw error;
         users.value = data;
+
+        // Check if the logged-in user is an admin
+        const currentUser = await supabase.from("users").select("role").eq("id", user.id).single();
+        if (currentUser.data.role === 'ADMIN') {
+          isAdmin.value = true;
+        }
       } catch (error) {
         console.error("Lỗi khi lấy dữ liệu người dùng:", error);
       }
@@ -238,6 +261,7 @@ export default {
       deleteDialog,
       formTitle,
       users,
+      isAdmin,
       headers,
       editedItem,
       editedIndex,

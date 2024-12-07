@@ -56,7 +56,7 @@
 <script>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
-import { supabase } from "@/supabase"; // Importing supabase client
+import { supabase } from "@/supabase";
 
 export default {
   name: "LoginPage",
@@ -70,25 +70,21 @@ export default {
     const snackbarText = ref("");
     const snackbarColor = ref("success");
 
-    // Validation rules for email and password
     const rules = {
       required: (v) => !!v || "Trường này là bắt buộc",
       email: (v) => /.+@.+\..+/.test(v) || "Email không hợp lệ",
     };
 
-    // Function to show snackbar notifications
     const showSnackbar = (text, color = "success") => {
       snackbarText.value = text;
       snackbarColor.value = color;
       snackbar.value = true;
     };
 
-    // Login function
     const login = async () => {
       try {
         isLoading.value = true;
 
-        // Perform login with email and password
         const { data, error } = await supabase.auth.signInWithPassword({
           email: email.value,
           password: password.value,
@@ -96,22 +92,19 @@ export default {
 
         if (error) throw error;
 
-        // Fetch user role
-        const { data: userData, error: userError } = await supabase
-          .from("users")
-          .select("role")
-          .eq("id", data.user.id)
-          .single();
+        const { data: claimsData, error: claimsError } = await supabase
+          .rpc("get_custom_claims", {
+            user_id: data.user.id,
+          });
 
-        if (userError) {
-          console.error("Error fetching user role:", userError.message);
+        if (claimsError) {
+          console.error("Error fetching custom claims:", claimsError.message);
           throw new Error("Không thể xác minh quyền truy cập");
         }
 
-        // Redirect based on role
-        const redirectPath = userData.role === "ADMIN" ? "/admin-dashboard" : "/";
+        const redirectPath = claimsData.role === "ADMIN" ? "/admin-dashboard" : "/";
         showSnackbar(
-          userData.role === "ADMIN"
+          claimsData.role === "ADMIN"
             ? "Chào mừng Admin!"
             : "Xin chào người dùng!",
           "success"
@@ -140,6 +133,7 @@ export default {
     };
   },
 };
+
 </script>
 
 <style scoped>

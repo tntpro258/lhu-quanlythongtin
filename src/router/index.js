@@ -14,7 +14,6 @@ import Patents from "../views/Patents.vue";
 import RegisterForm from "@/views/RegisterForm.vue";
 import AuthCallback from "../views/AuthCallback.vue";
 import ConfirmRegistration from '../views/ConfirmRegistration.vue'
-import AdminUserManagement from '../views/AdminUserManagement.vue'
 import UserProfile from '@/views/UserProfile.vue';
 
 
@@ -68,13 +67,6 @@ const routes = [
     path: '/confirm-registration',
     name: 'ConfirmRegistration',
     component: ConfirmRegistration
-  },
-  
-  {
-    path: '/admin/users',
-    name: 'AdminUserManagement',
-    component: AdminUserManagement,
-    meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/admin-dashboard',
