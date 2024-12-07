@@ -14,9 +14,8 @@ import Patents from "../views/Patents.vue";
 import RegisterForm from "@/views/RegisterForm.vue";
 import AuthCallback from "../views/AuthCallback.vue";
 import ConfirmRegistration from '../views/ConfirmRegistration.vue'
-import AdminLogin from '../views/AdminLogin.vue'
 import AdminUserManagement from '../views/AdminUserManagement.vue'
-import AdminRegister from '../views/AdminRegister.vue'
+import UserProfile from '@/views/UserProfile.vue';
 
 
 const routes = [
@@ -70,16 +69,7 @@ const routes = [
     name: 'ConfirmRegistration',
     component: ConfirmRegistration
   },
-  {
-    path: '/admin-login',
-    name: 'AdminLogin',
-    component: AdminLogin
-  },
-  {
-    path: '/admin-register',
-    name: 'AdminRegister',
-    component: AdminRegister
-  },
+  
   {
     path: '/admin/users',
     name: 'AdminUserManagement',
@@ -92,7 +82,12 @@ const routes = [
     component: () => import('@/views/AdminDashboard.vue'),
     meta: { requiresAdmin: true }
   },
-  
+  {
+    path: "/user/:id", // Nhận ID từ URL
+    name: "UserProfile",
+    component: UserProfile,
+    props: true, // Truyền props từ URL
+  },
 ];
 
 const router = createRouter({

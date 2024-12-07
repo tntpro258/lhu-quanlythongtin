@@ -1,107 +1,120 @@
 <template>
-  <v-container class="fill-height" fluid>
-    <v-row>
-      <v-col cols="12">
-        <v-btn color="primary" @click="openAddUserDialog" class="mb-4">
+  <v-container fluid>
+    <v-card class="elevation-2 pa-4">
+      <v-card-title class="text-h4 mb-4">
+        Quản lý người dùng
+        <v-spacer></v-spacer>
+        <v-btn color="primary" @click="openDialog" prepend-icon="mdi-plus">
           Thêm người dùng
         </v-btn>
-        <v-card>
-          <v-card-title>
-            <span class="headline">Quản lý người dùng</span>
-          </v-card-title>
-          <v-card-text>
-            <v-text-field
-              v-model="search"
-              label="Tìm kiếm người dùng"
-              append-icon="mdi-magnify"
-              single-line
-              hide-details
-              class="mb-4"
-            ></v-text-field>
-            <v-data-table
-              :headers="headers"
-              :items="filteredUsers"
-              :search="search"
-              class="elevation-1"
-            >
-              <template v-slot:top>
-                <v-toolbar flat>
-                  <v-toolbar-title>Tất cả người dùng</v-toolbar-title>
-                  <v-spacer></v-spacer>
-                  <v-pagination
-                    v-model="page"
-                    :length="Math.ceil(filteredUsers.length / 5)"
-                    class="mt-2"
-                  ></v-pagination>
-                </v-toolbar>
-              </template>
+      </v-card-title>
 
-              <template v-slot:[`item.name`]="{ item }">
-                {{ item.name }}
-              </template>
-              <template v-slot:[`item.email`]="{ item }">
-                {{ item.email }}
-              </template>
-              <template v-slot:[`item.role`]="{ item }">
-                <v-chip :color="getRoleColor(item.role)" dark>
-                  {{ item.role }}
-                </v-chip>
-              </template>
-              <template v-slot:[`item.created_at`]="{ item }">
-                {{ new Date(item.created_at).toLocaleDateString() }}
-              </template>
-              <template v-slot:[`item.actions`]="{ item }">
-                <v-icon small class="mr-2" @click="editItem(item)">mdi-pencil</v-icon>
-                <v-icon small @click="deleteItem(item)">mdi-delete</v-icon>
-              </template>
-            </v-data-table>
+      <!-- Bảng danh sách người dùng -->
+      <v-data-table
+        v-if="users.length > 0"
+        :headers="headers"
+        :items="users"
+        :items-per-page="10"
+        class="elevation-1"
+      >
+        <!-- Tô màu vai trò -->
+        <template v-slot:[`item.role`]="{ item }">
+          <v-chip
+            :color="item.role === 'admin' ? 'red lighten-2' : 'blue lighten-2'"
+            dark
+          >
+            {{ item.role.toUpperCase() }}
+          </v-chip>
+        </template>
 
-            <v-alert v-if="!filteredUsers.length" type="info" color="info">
-              Không có dữ liệu người dùng
-            </v-alert>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+        <!-- Các nút thao tác -->
+        <template v-slot:[`item.actions`]="{ item }">
+          <v-btn icon color="info" @click="viewProfile(item)" class="mr-2">
+            <v-icon>mdi-eye</v-icon>
+          </v-btn>
+          <v-btn icon color="warning" @click="editItem(item)" class="mr-2">
+            <v-icon>mdi-pencil</v-icon>
+          </v-btn>
+          <v-btn icon color="error" @click="deleteItem(item)">
+            <v-icon>mdi-delete</v-icon>
+          </v-btn>
+        </template>
+      </v-data-table>
+    </v-card>
 
-    <!-- Dialog thêm người dùng -->
+    <!-- Hộp thoại Thêm/Chỉnh sửa người dùng -->
     <v-dialog v-model="dialog" max-width="500px">
       <v-card>
-        <v-card-title>
-          <span class="headline">Thêm người dùng mới</span>
+        <v-card-title class="text-h5 bg-primary text-white">
+          {{ formTitle }}
         </v-card-title>
         <v-card-text>
-          <v-form ref="form" v-model="isFormValid">
-            <v-text-field
-              v-model="newUser.name"
-              label="Tên"
-              :rules="[rules.required]"
-              required
-            ></v-text-field>
-
-            <v-text-field
-              v-model="newUser.email"
-              label="Email"
-              :rules="[rules.required, rules.email]"
-              required
-            ></v-text-field>
-
-            <v-text-field
-              v-model="newUser.password"
-              label="Mật khẩu"
-              type="password"
-              :rules="[rules.required]"
-              required
-            ></v-text-field>
-          </v-form>
+          <v-container>
+            <v-row>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="editedItem.name"
+                  label="Tên đăng nhập"
+                  prepend-icon="mdi-account"
+                  required
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="editedItem.email"
+                  label="Email"
+                  prepend-icon="mdi-email"
+                  required
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-select
+                  v-model="editedItem.role"
+                  :items="['user', 'admin']"
+                  label="Vai trò"
+                  prepend-icon="mdi-shield-account"
+                  required
+                ></v-select>
+              </v-col>
+              <v-col cols="12" v-if="!editedItem.id">
+                <v-text-field
+                  v-model="editedItem.password"
+                  label="Mật khẩu"
+                  type="password"
+                  prepend-icon="mdi-lock"
+                  required
+                ></v-text-field>
+              </v-col>
+            </v-row>
+          </v-container>
         </v-card-text>
-
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue" text @click="closeAddUserDialog">Hủy</v-btn>
-          <v-btn color="primary" @click="addUser" :disabled="!isFormValid">
-            Thêm
+          <v-btn color="blue-darken-1" variant="text" @click="close">Hủy</v-btn>
+          <v-btn color="blue-darken-1" variant="text" @click="save">Lưu</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Hộp thoại xác nhận xóa -->
+    <v-dialog v-model="deleteDialog" max-width="400px">
+      <v-card>
+        <v-card-title class="text-h5 bg-error text-white">
+          Xác nhận xóa
+        </v-card-title>
+        <v-card-text class="pt-4">
+          Bạn có chắc chắn muốn xóa người dùng này?
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="blue-darken-1"
+            variant="text"
+            @click="deleteDialog = false"
+          >
+            Hủy
           </v-btn>
+          <v-btn color="error" variant="text" @click="confirmDelete">Xóa</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -109,158 +122,133 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from "vue";
-import { mdiPencil, mdiDelete, mdiMagnify } from "@mdi/js";
-import { supabase } from "@/supabase"; // Import Supabase client
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { supabase } from "@/supabase";
 
 export default {
-  name: "AdminDashboard",
+  name: "UserManagement",
   setup() {
-    const users = ref([]);
+    const router = useRouter();
     const dialog = ref(false);
-    const newUser = ref({
+    const deleteDialog = ref(false);
+    const formTitle = ref("Thêm người dùng");
+    const users = ref([]);
+    const headers = [
+      { title: "Tên đăng nhập", align: "start", key: "name" },
+      { title: "Email", align: "start", key: "email" },
+      { title: "Vai trò", align: "start", key: "role" },
+      { title: "Thao tác", align: "center", key: "actions", sortable: false },
+    ];
+    const editedItem = ref({
+      id: null,
       name: "",
       email: "",
+      role: "user",
       password: "",
     });
-    const isFormValid = ref(false);
-    const search = ref("");
-    const page = ref(1);
-
-    const headers = [
-      { text: "Tên", align: "start", value: "name", sortable: true },
-      { text: "Email", value: "email", sortable: true },
-      { text: "Vai trò", value: "role", sortable: true },
-      { text: "Ngày tạo", value: "created_at", sortable: true },
-      { text: "Actions", value: "actions", sortable: false }
-    ];
-
-    const rules = {
-      required: (v) => !!v || "Trường này là bắt buộc",
-      email: (v) => /.+@.+\..+/.test(v) || "Email không hợp lệ",
+    const defaultItem = {
+      id: null,
+      name: "",
+      email: "",
+      role: "user",
+      password: "",
     };
+    const editedIndex = ref(-1);
+    const userToDelete = ref(null);
 
     const fetchUsers = async () => {
       try {
-        const { data, error } = await supabase
-          .from("users")
-          .select("id, name, email, role, created_at");
-
+        const { data, error } = await supabase.from("users").select("*");
         if (error) throw error;
-
         users.value = data;
       } catch (error) {
-        console.error("Error fetching users:", error.message);
+        console.error("Lỗi khi lấy dữ liệu người dùng:", error);
       }
     };
 
-    const getRoleColor = (role) => {
-      switch (role) {
-        case "ADMIN":
-          return "red";
-        case "USER":
-        default:
-          return "green";
-      }
-    };
-
-    const openAddUserDialog = () => {
+    const openDialog = () => {
+      editedItem.value = { ...defaultItem };
+      formTitle.value = "Thêm người dùng";
       dialog.value = true;
     };
 
-    const closeAddUserDialog = () => {
+    const close = () => {
       dialog.value = false;
-      newUser.value = { name: "", email: "", password: "" }; // Reset form
+      editedItem.value = { ...defaultItem };
+      editedIndex.value = -1;
     };
 
-    const addUser = async () => {
+    const save = async () => {
       try {
-        const { data, error } = await supabase.auth.signUp({
-          email: newUser.value.email,
-          password: newUser.value.password,
-        });
-
-        if (error) throw error;
-
-        const { error: dbError } = await supabase.from("users").insert([
-          {
-            id: data.user.id,
-            name: newUser.value.name,
-            email: newUser.value.email,
-            role: "USER", // Default role
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        ]);
-
-        if (dbError) throw dbError;
-
-        closeAddUserDialog();
-        fetchUsers(); // Refresh the list of users
-        console.log("User added successfully");
+        if (editedItem.value.id) {
+          const { error } = await supabase
+            .from("users")
+            .update(editedItem.value)
+            .eq("id", editedItem.value.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("users")
+            .insert(editedItem.value);
+          if (error) throw error;
+        }
+        await fetchUsers();
+        close();
       } catch (error) {
-        console.error("Error adding user:", error.message);
+        console.error("Lỗi khi lưu người dùng:", error);
       }
     };
 
     const editItem = (item) => {
-      // Logic to handle editing the user
-      console.log("Editing item:", item);
+      editedIndex.value = users.value.indexOf(item);
+      editedItem.value = { ...item };
+      formTitle.value = "Chỉnh sửa người dùng";
+      dialog.value = true;
     };
 
-    const deleteItem = async (item) => {
+    const deleteItem = (item) => {
+      userToDelete.value = item;
+      deleteDialog.value = true;
+    };
+
+    const confirmDelete = async () => {
       try {
-        if (confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-          const { error: authError } = await supabase.auth.api.deleteUser(item.id);
-          if (authError) throw authError;
-
-          const { error: dbError } = await supabase.from("users").delete().eq("id", item.id);
-          if (dbError) throw dbError;
-
-          fetchUsers(); // Refresh the list of users
-          console.log("User deleted successfully");
-        }
+        const { error } = await supabase
+          .from("users")
+          .delete()
+          .eq("id", userToDelete.value.id);
+        if (error) throw error;
+        await fetchUsers();
+        deleteDialog.value = false;
+        userToDelete.value = null;
       } catch (error) {
-        console.error("Error deleting user:", error.message);
+        console.error("Lỗi khi xóa người dùng:", error);
       }
     };
 
-    const filteredUsers = computed(() => {
-      return users.value.filter(
-        (user) =>
-          user.name.toLowerCase().includes(search.value.toLowerCase()) ||
-          user.email.toLowerCase().includes(search.value.toLowerCase())
-      );
-    });
+    const viewProfile = (item) => {
+      router.push({ name: "UserProfile", params: { id: item.id } });
+    };
 
-    // Fetch users on component mount
     onMounted(fetchUsers);
 
     return {
+      dialog,
+      deleteDialog,
+      formTitle,
       users,
       headers,
-      dialog,
-      newUser,
-      isFormValid,
-      rules,
-      getRoleColor,
-      fetchUsers,
-      openAddUserDialog,
-      closeAddUserDialog,
-      addUser,
+      editedItem,
+      editedIndex,
+      openDialog,
+      close,
+      save,
       editItem,
       deleteItem,
-      search,
-      filteredUsers,
-      page,
-      mdiPencil,
-      mdiDelete,
-      mdiMagnify
+      confirmDelete,
+      viewProfile,
     };
   },
 };
 </script>
-
-<style scoped>
-/* Add custom styles for the Admin Dashboard */
-</style>

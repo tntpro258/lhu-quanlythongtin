@@ -353,48 +353,69 @@ export default {
     };
 
     const copyToWord = () => {
-      const htmlContent = content.value;
+  const htmlContent = content.value;
 
-      const styledHtml = `
-        <!DOCTYPE html>
-        <html lang="vi">
-        <head>
-          <meta charset="UTF-8">
-          <style>
-            body {
-              font-family: 'Arial', 'Times New Roman', sans-serif;
-              font-size: 12pt;
-            }
-            p {
-              margin-bottom: 10pt;
-              text-align: justify;
-            }
-            h1, h2, h3, h4, h5, h6 {
-              font-weight: bold;
-              margin-top: 12pt;
-              margin-bottom: 6pt;
-            }
-            img {
-              max-width: 100%;
-              height: auto;
-            }
-          </style>
-        </head>
-        <body>
-          ${htmlContent}
-        </body>
-        </html>
-      `;
+  // Thêm style CSS để định dạng nội dung trong Word
+  const styledHtml = `
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body {
+          font-family: 'Arial', 'Times New Roman', sans-serif;
+          font-size: 12pt;
+          margin: 20px;
+        }
+        p {
+          margin-bottom: 10pt;
+          text-align: justify;
+          line-height: 1.5;
+        }
+        h1, h2, h3, h4, h5, h6 {
+          font-weight: bold;
+          margin-top: 12pt;
+          margin-bottom: 6pt;
+        }
+        h1 {
+          font-size: 24pt;
+        }
+        h2 {
+          font-size: 20pt;
+        }
+        h3 {
+          font-size: 18pt;
+        }
+        img {
+          max-width: 100%;
+          height: auto;
+        }
+        ul, ol {
+          margin-left: 20px;
+        }
+        li {
+          font-size: 12pt;
+        }
+      </style>
+    </head>
+    <body>
+      ${htmlContent}
+    </body>
+    </html>
+  `;
 
-      const converted = docx.asBlob(styledHtml, {
-        orientation: "portrait",
-        margins: { top: 720, right: 720, bottom: 720, left: 720 },
-      });
+  // Chuyển đổi nội dung HTML đã định dạng sang file Word
+  const converted = docx.asBlob(styledHtml, {
+    orientation: "A4", // Định dạng trang A4
+    margin: { top: 20, left: 20, right: 20, bottom: 20 }, // Thêm lề cho trang
+  });
 
-      saveAs(converted, `${props.fileName}.docx`);
+  // Lưu file dưới định dạng .docx
+  saveAs(converted, `${props.fileName}.docx`);
 
-      showSnackbar("Nội dung đã được xuất ra file Word thành công!", "success");
-    };
+  // Hiển thị thông báo thành công
+  showSnackbar("Nội dung đã được xuất ra file Word thành công!", "success");
+};
 
     // Add a watch effect to update the QuillEditor when content changes
     watch(content, (newContent) => {
